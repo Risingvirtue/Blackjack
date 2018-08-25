@@ -71,6 +71,7 @@ class Deck:
 class Player:
 	def __init__(self):
 		self.hand = []
+		self.prevTotal = 0
 	def total(self):
 		total = 0
 		hasAce = False
@@ -78,7 +79,9 @@ class Player:
 			if card.value == 1:
 				hasAce = True
 			total += min(card.value, 10)
-		return total
+		if hasAce:
+			return [total, total + 10]
+		return [total]
 	def hit(self, card):
 		self.hand.append(card)
 	def clear(self):
@@ -105,25 +108,45 @@ class Blackjack:
 			player.hit(self.deck.deal())
 		for player in self.players:
 			player.hit(self.deck.deal())
-		for player in self.players:
-			print(player)
-			print(player.total())
 	def shuffle(self):
 		self.deck.shuffle()
 	def playerMove(self):
 		for i in range(1,len(self.players)):
-			player = self.players[i]	
+			player = self.players[i]
+			player.prevTotal = player.total()
 			if random.random() < 0.5:
 				player.hit(self.deck.deal())
+			
 	def dealerMove(self):
 		dealer = self.players[0]
-		
-		
+		while max(dealer.total()) < 17:
+			dealer.hit(self.deck.deal())
+		print(max(dealer.total()))
+		print(dealer)
+	def winner(self):
+		dealerValue = max(self.players[0].total())
+		winners = []
+		for i in range(1, len(self.players)):
+			player = self.players[i]
+			playerValue = max(player.total())
+			if (playerValue < dealerValue):
+				winners.append(-1)
+			elif (playerValue == dealerValue):
+				winners.append(0)
+			else:
+				winners.append(1)
+		return winners
+	def lastValue(self, player):
+		if player >= len(self.players):
+			return None
+		else:
+			return self.players[player].prevTotal
 		
 blackjack = Blackjack(1)
 blackjack.shuffle()
 
 blackjack.play()
+blackjack.dealerMove()
 
 
 
