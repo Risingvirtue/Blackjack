@@ -23,11 +23,12 @@ class Card:
 			currStr += str(self.value)
 		currStr += str(self.suit)
 		return currStr
+	
 		
 class Deck:
 	def __init__(self):
 		self.deck = []
-		self.currCard = 0
+		self.index = 0
 		for i in range(1, 14):
 			for j in range(4):
 				self.deck.append(Card(i,j))
@@ -54,13 +55,76 @@ class Deck:
 	def shuffle(self):
 		for i in range(9):
 			self.riffle()
+		self.index = 0
 	def __str__(self):
 		currStr = []
 		for card in self.deck:
 			currStr.append(str(card))
 		return str(currStr)
+	def deal(self):
+		if self.index >= len(self.deck):
+			return None
+		card = self.deck[self.index]
+		self.index = self.index + 1
+		return card
+		
+class Player:
+	def __init__(self):
+		self.hand = []
+	def total(self):
+		total = 0
+		hasAce = False
+		for card in self.hand:
+			if card.value == 1:
+				hasAce = True
+			total += min(card.value, 10)
+		return total
+	def hit(self, card):
+		self.hand.append(card)
+	def clear(self):
+		self.hand = []
+	def __str__(self):
+		handArr = []
+		for card in self.hand:
+			handArr.append(str(card))
+		return str(handArr)
+	def hasAce(self):
+		for card in self.hand:
+			if card.value == 1:
+				return true
+		return false
+class Blackjack:
+	def __init__(self, players):
+		self.deck = Deck()
+		self.players = []
+		self.players.append(Player())
+		for i in range(players):
+			self.players.append(Player())
+	def play(self):
+		for player in self.players:
+			player.hit(self.deck.deal())
+		for player in self.players:
+			player.hit(self.deck.deal())
+		for player in self.players:
+			print(player)
+			print(player.total())
+	def shuffle(self):
+		self.deck.shuffle()
+	def playerMove(self):
+		for i in range(1,len(self.players)):
+			player = self.players[i]	
+			if random.random() < 0.5:
+				player.hit(self.deck.deal())
+	def dealerMove(self):
+		dealer = self.players[0]
+		
+		
+		
+blackjack = Blackjack(1)
+blackjack.shuffle()
 
-deck = Deck()
-deck.shuffle()
-print(deck)
+blackjack.play()
+
+
+
 
