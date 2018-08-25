@@ -1,5 +1,6 @@
 import math
 import random
+import json
 class Suit:
 	Diamond = 0
 	Clover = 1
@@ -21,10 +22,15 @@ class Card:
 			currStr += "K"
 		else:
 			currStr += str(self.value)
-		currStr += str(self.suit)
+		if self.suit == 0:
+			currStr += " Diamonds"
+		elif self.suit == 1:
+			currStr += " Clubs"
+		elif self.suit == 2:
+			currStr += " Hearts"
+		else: 
+			currStr += " Spades"
 		return currStr
-	
-		
 class Deck:
 	def __init__(self):
 		self.deck = []
@@ -67,7 +73,6 @@ class Deck:
 		card = self.deck[self.index]
 		self.index = self.index + 1
 		return card
-		
 class Player:
 	def __init__(self):
 		self.hand = []
@@ -98,7 +103,6 @@ class Player:
 		return false
 	def maxTotal(self):
 		total = self.total()
-		
 		currMax = max(total)
 		if (currMax > 21):
 			return min(total)
@@ -109,7 +113,7 @@ class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck()
 		self.players = []
-		self.players.append(Player())
+		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
 	def play(self):
@@ -124,22 +128,26 @@ class Blackjack:
 			player = self.players[i]
 			player.prevTotal = player.maxTotal()
 			if random.random() < 0.5:
-				player.hit(self.deck.deal())	
+				player.hit(self.deck.deal())
+			print(player)
+			print(player.maxTotal())
 	def dealerMove(self):
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
-		print(dealer.maxTotal())
 		print(dealer)
+		print(dealer.maxTotal())
+		
 	def winner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
 		for i in range(1, len(self.players)):
 			player = self.players[i]
-			print(player)
 			playerValue = player.maxTotal()
 			if (playerValue > 21):
 				winners.append(-1)
+			elif (dealerValue > 21):
+				winners.append(1)
 			elif (playerValue < dealerValue):
 				winners.append(-1)
 			elif (playerValue == dealerValue):
@@ -147,11 +155,17 @@ class Blackjack:
 			else:
 				winners.append(1)
 		return winners
-	def lastValue(self, player):
+	def standWinner(self):
+		#todo
+		return False
+	def lastPlayerValue(self, player):
 		if player + 1 >= len(self.players):
 			return None
 		else:
 			return self.players[player + 1].prevTotal
+	def dealerFaceUp(self):
+		dealer = self.players[0]
+		return min(dealer.hand[1].value, 10)
 		
 blackjack = Blackjack(1)
 blackjack.shuffle()
@@ -159,10 +173,22 @@ blackjack.shuffle()
 blackjack.play()
 blackjack.playerMove()
 blackjack.dealerMove()
-print(blackjack.winner())
-print(blackjack.lastValue(0))
+winner = blackjack.winner()[0]
+lastValue = blackjack.lastPlayerValue(0)
+dealerFaceUp = blackjack.dealerFaceUp()
+
+f=open("blackjack.txt", "r")
+dict = json.loads(f.read())
+
+key = str(lastValue) + "&" + str(dealerFaceUp)
+if (key not in dict):
+	dict[key] = {"0": 0, "-1": 0, "1": 0}
+dict[key][str(winner)] += 1
 
 
+f = open("blackjack.txt","w+")
+f.write(json.dumps(dict))
+f.close()
 
 
 
