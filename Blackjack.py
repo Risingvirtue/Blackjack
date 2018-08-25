@@ -122,7 +122,7 @@ class Blackjack:
 	def playerMove(self):
 		for i in range(1,len(self.players)):
 			player = self.players[i]
-			player.prevTotal = player.total()
+			player.prevTotal = player.maxTotal()
 			if random.random() < 0.5:
 				player.hit(self.deck.deal())	
 	def dealerMove(self):
@@ -148,10 +148,10 @@ class Blackjack:
 				winners.append(1)
 		return winners
 	def lastValue(self, player):
-		if player >= len(self.players):
+		if player + 1 >= len(self.players):
 			return None
 		else:
-			return self.players[player].prevTotal
+			return self.players[player + 1].prevTotal
 		
 blackjack = Blackjack(1)
 blackjack.shuffle()
@@ -159,8 +159,8 @@ blackjack.shuffle()
 blackjack.play()
 blackjack.playerMove()
 blackjack.dealerMove()
-blackjack.winner()
-
+print(blackjack.winner())
+print(blackjack.lastValue(0))
 
 
 
