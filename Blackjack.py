@@ -96,6 +96,15 @@ class Player:
 			if card.value == 1:
 				return true
 		return false
+	def maxTotal(self):
+		total = self.total()
+		
+		currMax = max(total)
+		if (currMax > 21):
+			return min(total)
+		else:
+			return currMax
+		
 class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck()
@@ -115,21 +124,23 @@ class Blackjack:
 			player = self.players[i]
 			player.prevTotal = player.total()
 			if random.random() < 0.5:
-				player.hit(self.deck.deal())
-			
+				player.hit(self.deck.deal())	
 	def dealerMove(self):
 		dealer = self.players[0]
-		while max(dealer.total()) < 17:
+		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
-		print(max(dealer.total()))
+		print(dealer.maxTotal())
 		print(dealer)
 	def winner(self):
-		dealerValue = max(self.players[0].total())
+		dealerValue = self.players[0].maxTotal()
 		winners = []
 		for i in range(1, len(self.players)):
 			player = self.players[i]
-			playerValue = max(player.total())
-			if (playerValue < dealerValue):
+			print(player)
+			playerValue = player.maxTotal()
+			if (playerValue > 21):
+				winners.append(-1)
+			elif (playerValue < dealerValue):
 				winners.append(-1)
 			elif (playerValue == dealerValue):
 				winners.append(0)
@@ -146,7 +157,12 @@ blackjack = Blackjack(1)
 blackjack.shuffle()
 
 blackjack.play()
+blackjack.playerMove()
 blackjack.dealerMove()
+blackjack.winner()
+
+
+
 
 
 
