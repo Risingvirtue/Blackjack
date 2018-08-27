@@ -123,20 +123,21 @@ class Blackjack:
 			player.hit(self.deck.deal())
 	def shuffle(self):
 		self.deck.shuffle()
+		for player in self.players:
+			player.clear()
 	def playerMove(self):
 		for i in range(1,len(self.players)):
 			player = self.players[i]
 			player.prevTotal = player.maxTotal()
-			if random.random() < 0.5:
-				player.hit(self.deck.deal())
-			print(player)
-			print(player.maxTotal())
+			player.hit(self.deck.deal())
+	def playerHit(self):
+		player = self.players[1]
+		player.hit(self.deck.deal())
 	def dealerMove(self):
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
-		print(dealer)
-		print(dealer.maxTotal())
+		
 		
 	def winner(self):
 		dealerValue = self.players[0].maxTotal()
@@ -148,16 +149,28 @@ class Blackjack:
 				winners.append(-1)
 			elif (dealerValue > 21):
 				winners.append(1)
-			elif (playerValue < dealerValue):
+			elif playerValue < dealerValue:
 				winners.append(-1)
-			elif (playerValue == dealerValue):
+			elif playerValue == dealerValue:
 				winners.append(0)
 			else:
 				winners.append(1)
 		return winners
 	def standWinner(self):
-		#todo
-		return False
+		dealerValue = self.players[0].maxTotal()
+		winners = []
+		for i in range(1, len(self.players)):
+			player = self.players[i]
+			playerValue = player.prevTotal
+			if dealerValue > 21:
+				winners.append(1)
+			if playerValue < dealerValue:
+				winners.append(-1)
+			elif playerValue == dealerValue:
+				winners.append(0)
+			else:
+				winners.append(1)
+		return winners
 	def lastPlayerValue(self, player):
 		if player + 1 >= len(self.players):
 			return None
@@ -167,28 +180,89 @@ class Blackjack:
 		dealer = self.players[0]
 		return min(dealer.hand[1].value, 10)
 		
+def saveInfo(fileName, winner, lastValue, dealerFaceUp):
+	f=open(fileName, "r")
+	dict = json.loads(f.read())
+	key = str(lastValue) + "&" + str(dealerFaceUp)
+	if (key not in dict):
+		dict[key] = {"0": 0, "-1": 0, "1": 0}
+	dict[key][str(winner)] += 1
+	
+	f = open(fileName,"w+")
+	f.write(json.dumps(dict))
+	f.close()
+"""
+f = open("blackjackHit.txt","w+")
+f.write(json.dumps({}))
+f.close()
+
+f = open("blackjackStand.txt","w+")
+f.write(json.dumps({}))
+f.close()
+"""
+blackjack = Blackjack(1)
+blackjack.shuffle()
+"""
+for i in range(100000):
+	if i % 1000 == 0:
+		print(i)
+	blackjack.play()
+	blackjack.playerMove()
+	blackjack.dealerMove()
+	winner = blackjack.winner()[0]
+	standWinner = blackjack.standWinner()[0]
+	lastValue = blackjack.lastPlayerValue(0)
+	dealerFaceUp = blackjack.dealerFaceUp()
+	
+	
+	saveInfo("blackjackHit.txt", winner, lastValue, dealerFaceUp)
+	saveInfo("blackjackStand.txt", standWinner, lastValue, dealerFaceUp)
+	blackjack.shuffle()
+
+"""
 blackjack = Blackjack(1)
 blackjack.shuffle()
 
 blackjack.play()
-blackjack.playerMove()
-blackjack.dealerMove()
-winner = blackjack.winner()[0]
-lastValue = blackjack.lastPlayerValue(0)
-dealerFaceUp = blackjack.dealerFaceUp()
-
-f=open("blackjack.txt", "r")
-dict = json.loads(f.read())
-
-key = str(lastValue) + "&" + str(dealerFaceUp)
-if (key not in dict):
-	dict[key] = {"0": 0, "-1": 0, "1": 0}
-dict[key][str(winner)] += 1
-
-
-f = open("blackjack.txt","w+")
-f.write(json.dumps(dict))
-f.close()
+print("Dealer's face up is: ")
+print(blackjack.players[0].hand[1])
+while blackjack.players[1].maxTotal() < 21:
+	yourTotal = blackjack.players[1].maxTotal()
+	print("Your hand:")
+	print(blackjack.players[1])
+	print("Total: " + str(yourTotal))
+	choice = input("Hit? Y or N:")
+	if choice == "Y":
+		blackjack.playerHit()
+	else:
+		break
+if blackjack.players[1].maxTotal() > 21:
+	print("Your hand:")
+	print(blackjack.players[1])
+	print("Busted, you lose")
+else:
+	blackjack.dealerMove()
+	yourTotal = blackjack.players[1].maxTotal()
+	dealerTotal = blackjack.players[0].maxTotal()
+	print("Your hand: ")
+	print(blackjack.players[1])
+	print("Total: " + str(yourTotal))
+	print("Dealer's hand: ")
+	print(blackjack.players[0])
+	print("Total: " + str(dealerTotal))
+	if dealerTotal > 21:
+		print("You Win!")
+	elif yourTotal < dealerTotal:
+		print("You lose!")
+	elif yourTotal == dealerTotal:
+		print("Push")
+	else: 
+		print("You Win!")
+		
+		
+		
+		
+	
 
 
 
