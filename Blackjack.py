@@ -109,7 +109,8 @@ class Player:
 			return min(total)
 		else:
 			return currMax
-		
+	def isBusted(self):
+		return maxTotal > 21
 class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck(6)
@@ -124,7 +125,7 @@ class Blackjack:
 			self.count = self.count + 1
 		elif value >= 10 or value == 1:
 			self.count = self.count - 1
-	def play(self):
+	def deal(self):
 		for i in range(len(self.players)):
 			player = self.players[i]
 			card = self.deck.deal()
@@ -184,6 +185,9 @@ class Blackjack:
 			else:
 				winners.append(1)
 		return winners
+	def countDealer(self):
+		dealer = self.players[0]
+		self.cardCount(dealer.hand[0])
 	def lastPlayerValue(self, player):
 		if player + 1 >= len(self.players):
 			return None
@@ -195,6 +199,13 @@ class Blackjack:
 	def dealerFaceDown(self):
 		dealer = self.players[0]
 		return min(dealer.hand[0].value, 10)
+	def play(self):
+		self.deal()
+		self.playerMove()
+		if not self.players[1].isBusted:	
+			blackjack.dealerMove()
+	
+		
 	def __str__(self):
 		print("Dealer: ")
 		print(self.players[0])
@@ -213,11 +224,9 @@ def saveInfo(fileName, arr):
 		if (key not in dict):
 			dict[key] = {"0": 0, "-1": 0, "1": 0}
 		dict[key][str(result["winner"])] += 1
-	
 	f = open(fileName,"w+")
 	f.write(json.dumps(dict))
 	f.close()
-
 def wipeSaves():
 	f = open("blackjackHit.txt","w+")
 	f.write(json.dumps({}))

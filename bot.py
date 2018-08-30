@@ -4,7 +4,7 @@ import Blackjack as b
 
 blackjack = b.Blackjack(1)
 blackjack.shuffle()
-blackjack.play()
+blackjack.deal()
 blackjack.playerMove()
 blackjack.dealerMove()
 print(blackjack.count)

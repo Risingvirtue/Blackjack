@@ -2,7 +2,7 @@ import Blackjack as b
 blackjack = b.Blackjack(1)
 blackjack.shuffle()
 
-blackjack.play()
+blackjack.deal()
 print("Dealer's face up is: ")
 print(blackjack.players[0].hand[1])
 while blackjack.players[1].maxTotal() < 21:
