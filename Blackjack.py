@@ -32,12 +32,13 @@ class Card:
 			currStr += " Spades"
 		return currStr
 class Deck:
-	def __init__(self):
+	def __init__(self, numDecks):
 		self.deck = []
 		self.index = 0
-		for i in range(1, 14):
-			for j in range(4):
-				self.deck.append(Card(i,j))
+		for k in range(numDecks):
+			for i in range(1, 14):
+				for j in range(4):
+					self.deck.append(Card(i,j))
 	def riffle(self):
 		l = 0
 		m = math.floor(len(self.deck) / 2)
@@ -111,16 +112,29 @@ class Player:
 		
 class Blackjack:
 	def __init__(self, players):
-		self.deck = Deck()
+		self.deck = Deck(6)
+		self.count = 0
 		self.players = []
 		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
+	def cardCount(self, card):
+		value = card.value
+		if value <= 6 and value >= 2:
+			self.count = self.count + 1
+		elif value >= 10 or value == 1:
+			self.count = self.count - 1
 	def play(self):
+		for i in range(len(self.players)):
+			player = self.players[i]
+			card = self.deck.deal()
+			player.hit(card)
+			if i != 0:
+				self.cardCount(card)
 		for player in self.players:
-			player.hit(self.deck.deal())
-		for player in self.players:
-			player.hit(self.deck.deal())
+			card = self.deck.deal()
+			player.hit(card)
+			self.cardCount(card)
 	def shuffle(self):
 		self.deck.shuffle()
 		for player in self.players:
@@ -129,7 +143,8 @@ class Blackjack:
 		for i in range(1,len(self.players)):
 			player = self.players[i]
 			player.prevTotal = player.maxTotal()
-			player.hit(self.deck.deal())
+			card = self.deck.deal()
+			player.hit(card)
 	def playerHit(self):
 		player = self.players[1]
 		player.hit(self.deck.deal())
@@ -137,8 +152,6 @@ class Blackjack:
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
-		
-		
 	def winner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
@@ -179,14 +192,27 @@ class Blackjack:
 	def dealerFaceUp(self):
 		dealer = self.players[0]
 		return min(dealer.hand[1].value, 10)
+	def dealerFaceDown(self):
+		dealer = self.players[0]
+		return min(dealer.hand[0].value, 10)
+	def __str__(self):
+		print("Dealer: ")
+		print(self.players[0])
+		print(self.players[0].maxTotal())
+		print("Player: ")
+		print(self.players[1])
+		print(self.players[1].maxTotal())
+		return ""
 		
-def saveInfo(fileName, winner, lastValue, dealerFaceUp):
+def saveInfo(fileName, arr):
 	f=open(fileName, "r")
 	dict = json.loads(f.read())
-	key = str(lastValue) + "&" + str(dealerFaceUp)
-	if (key not in dict):
-		dict[key] = {"0": 0, "-1": 0, "1": 0}
-	dict[key][str(winner)] += 1
+	for result in arr:
+		
+		key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"])
+		if (key not in dict):
+			dict[key] = {"0": 0, "-1": 0, "1": 0}
+		dict[key][str(result["winner"])] += 1
 	
 	f = open(fileName,"w+")
 	f.write(json.dumps(dict))
@@ -200,13 +226,19 @@ def wipeSaves():
 	f = open("blackjackStand.txt","w+")
 	f.write(json.dumps({}))
 	f.close()
+
 def runPlays(times):
 	blackjack = Blackjack(1)
 	blackjack.shuffle()
-
+	standArr = []
+	hitArr = []
 	for i in range(times):
-		if i % 1000 == 0:
+		if i % 10000 == 0:
 			print(i)
+			saveInfo("blackjackHit.txt", hitArr)
+			saveInfo("blackjackStand.txt", standArr)
+			standArr = []
+			hitArr = []
 		blackjack.play()
 		blackjack.playerMove()
 		blackjack.dealerMove()
@@ -214,9 +246,14 @@ def runPlays(times):
 		standWinner = blackjack.standWinner()[0]
 		lastValue = blackjack.lastPlayerValue(0)
 		dealerFaceUp = blackjack.dealerFaceUp()
-		saveInfo("blackjackHit.txt", winner, lastValue, dealerFaceUp)
-		saveInfo("blackjackStand.txt", standWinner, lastValue, dealerFaceUp)
+		standArr.append({"winner": standWinner, "lastValue": lastValue, "dealerFaceUp": dealerFaceUp})
+		hitArr.append({"winner": winner, "lastValue": lastValue, "dealerFaceUp": dealerFaceUp})
 		blackjack.shuffle()
+	saveInfo("blackjackHit.txt", hitArr)
+	saveInfo("blackjackStand.txt", standArr)
+
+	
+	
 
 
 		

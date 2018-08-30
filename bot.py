@@ -1,5 +1,10 @@
 import Blackjack as b
-import math
-import random
-import json
 
+#b.runPlays(100000);
+
+blackjack = b.Blackjack(1)
+blackjack.shuffle()
+blackjack.play()
+blackjack.playerMove()
+blackjack.dealerMove()
+print(blackjack.count)
