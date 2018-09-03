@@ -35,6 +35,7 @@ class Deck:
 	def __init__(self, numDecks):
 		self.deck = []
 		self.index = 0
+		self.length = numDecks * 52
 		for k in range(numDecks):
 			for i in range(1, 14):
 				for j in range(4):
@@ -60,8 +61,7 @@ class Deck:
 					r += 1
 		self.deck = newDeck
 	def shuffle(self):
-		for i in range(9):
-			self.riffle()
+		random.shuffle(self.deck)
 		self.index = 0
 	def __str__(self):
 		currStr = []
@@ -126,6 +126,9 @@ class Blackjack:
 		elif value >= 10 or value == 1:
 			self.count = self.count - 1
 	def deal(self):
+		self.clearHands()
+		if self.deck.index > len(self.deck.deck) / 2:
+			self.shuffle()
 		for i in range(len(self.players)):
 			player = self.players[i]
 			card = self.deck.deal()
@@ -138,6 +141,8 @@ class Blackjack:
 			self.cardCount(card)
 	def shuffle(self):
 		self.deck.shuffle()
+		self.count = 0
+	def clearHands(self):
 		for player in self.players:
 			player.clear()
 	def playerMove(self):
@@ -188,6 +193,9 @@ class Blackjack:
 	def countDealer(self):
 		dealer = self.players[0]
 		self.cardCount(dealer.hand[0])
+		player = self.players[1]
+		for i in range(2, len(player.hand)):
+			self.cardCount(player.hand[i])
 	def lastPlayerValue(self, player):
 		if player + 1 >= len(self.players):
 			return None
@@ -204,8 +212,14 @@ class Blackjack:
 		self.playerMove()
 		if not self.players[1].isBusted:	
 			blackjack.dealerMove()
-	
-		
+	def result(self):
+		cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
+		self.countDealer();
+		return {"winner": self.winner()[0], 
+				"standWinner": self.standWinner()[0], 
+				"lastValue": self.lastPlayerValue(0), 
+				"dealerFaceUp": self.dealerFaceUp(),
+				"cardCount": cardCount}
 	def __str__(self):
 		print("Dealer: ")
 		print(self.players[0])
@@ -219,8 +233,11 @@ def saveInfo(fileName, arr):
 	f=open(fileName, "r")
 	dict = json.loads(f.read())
 	for result in arr:
-		
-		key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"])
+		key = ""
+		if "count" in result:
+			key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"]) + "&" + str(result["count"])
+		else:
+			key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"])
 		if (key not in dict):
 			dict[key] = {"0": 0, "-1": 0, "1": 0}
 		dict[key][str(result["winner"])] += 1
@@ -228,11 +245,11 @@ def saveInfo(fileName, arr):
 	f.write(json.dumps(dict))
 	f.close()
 def wipeSaves():
-	f = open("blackjackHit.txt","w+")
+	f = open("blackjackHitCount.txt","w+")
 	f.write(json.dumps({}))
 	f.close()
 
-	f = open("blackjackStand.txt","w+")
+	f = open("blackjackStandCount.txt","w+")
 	f.write(json.dumps({}))
 	f.close()
 
@@ -242,13 +259,13 @@ def runPlays(times):
 	standArr = []
 	hitArr = []
 	for i in range(times):
-		if i % 10000 == 0:
+		if i % 100000 == 0:
 			print(i)
 			saveInfo("blackjackHit.txt", hitArr)
 			saveInfo("blackjackStand.txt", standArr)
 			standArr = []
 			hitArr = []
-		blackjack.play()
+		blackjack.deal()
 		blackjack.playerMove()
 		blackjack.dealerMove()
 		winner = blackjack.winner()[0]
@@ -260,6 +277,32 @@ def runPlays(times):
 		blackjack.shuffle()
 	saveInfo("blackjackHit.txt", hitArr)
 	saveInfo("blackjackStand.txt", standArr)
+def runCount(times):
+	blackjack = Blackjack(1)
+	blackjack.shuffle()
+	standArr = []
+	hitArr = []
+	maxCount = 0
+	for i in range(times):
+		if i % 100000 == 0:
+			print(i)
+			saveInfo("blackjackHitCount.txt", hitArr)
+			saveInfo("blackjackStandCount.txt", standArr)
+			standArr = []
+			hitArr = []
+		blackjack.play()
+		result = blackjack.result()
+		standArr.append({"winner": result["standWinner"], 
+						"lastValue": result["lastValue"], 
+						"dealerFaceUp": result["dealerFaceUp"],
+						"count": result["cardCount"]})
+		hitArr.append({"winner": result["winner"], 
+						"lastValue": result["lastValue"], 
+						"dealerFaceUp": result["dealerFaceUp"],
+						"count": result["cardCount"]})
+	saveInfo("blackjackHitCount.txt", hitArr)
+	saveInfo("blackjackStandCount.txt", standArr)
+	
 
 	
 	

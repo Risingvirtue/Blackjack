@@ -5,7 +5,7 @@ def csvConvert(fileName, saveFile):
 	contents = ""
 	for pair in dict:
 		combo = pair.split('&')
-		contents += combo[0] + ',' + combo[1]
+		contents += combo[0] + ',' + combo[1] + ',' + combo[2]
 		contents += ',' + str(dict[pair]["0"])
 		contents += ',' + str(dict[pair]["-1"])
 		contents += ',' + str(dict[pair]["1"])
@@ -14,4 +14,5 @@ def csvConvert(fileName, saveFile):
 	saveFile.write(contents)
 	saveFile.close()
 	
-csvConvert("blackjackHit.txt", "hitCSV.csv")
+csvConvert("blackjackHitCount.txt", "hitCSVCount.csv")
+csvConvert("blackjackStandCount.txt", "standCSVCount.csv")
