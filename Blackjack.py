@@ -151,6 +151,12 @@ class Blackjack:
 			player.prevTotal = player.maxTotal()
 			card = self.deck.deal()
 			player.hit(card)
+	def normal(self):
+		for i in range(1,len(self.players)):
+			player = self.players[i]
+			score = player.maxTotal()
+			while (not player.isBusted and score < 17):
+				player.hit(card)
 	def playerHit(self):
 		player = self.players[1]
 		player.hit(self.deck.deal())
@@ -302,7 +308,18 @@ def runCount(times):
 						"count": result["cardCount"]})
 	saveInfo("blackjackHitCount.txt", hitArr)
 	saveInfo("blackjackStandCount.txt", standArr)
-	
+
+def winRate(times):
+	blackjack = Blackjack(1)
+	blackjack.shuffle()
+	wins = 0
+	for i in range(times):
+		blackjack.deal()
+		blackjack.normal()
+		result = blackjack.result()
+		if result["winner"] == 1:
+			wins += 1
+	print(str(wins * 100 /times) + "%")
 
 	
 	
