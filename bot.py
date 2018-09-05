@@ -4,4 +4,5 @@ import Blackjack as b
 
 #b.runCount(2000000)
 #b.wipeSaves()
-b.winRate(10000)
+blackjack = b.Blackjack(1)
+b.winRate(blackjack, blackjack.countPlay, 10000)

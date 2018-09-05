@@ -1,7 +1,6 @@
 import Blackjack as b
 blackjack = b.Blackjack(1)
 blackjack.shuffle()
-
 blackjack.deal()
 print("Dealer's face up is: ")
 print(blackjack.players[0].hand[1])

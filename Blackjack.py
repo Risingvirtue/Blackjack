@@ -103,6 +103,7 @@ class Player:
 				return true
 		return false
 	def maxTotal(self):
+	
 		total = self.total()
 		currMax = max(total)
 		if (currMax > 21):
@@ -110,15 +111,24 @@ class Player:
 		else:
 			return currMax
 	def isBusted(self):
-		return maxTotal > 21
+		return self.maxTotal() > 21
 class Blackjack:
 	def __init__(self, players):
+		hit = open("blackjackHitCount.txt", "r")
+		self.hit = json.loads(hit.read())
+		stand = open("blackjackStandCount.txt", "r")
+		self.stand = json.loads(stand.read())
 		self.deck = Deck(6)
 		self.count = 0
 		self.players = []
 		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
+	def giveMoney(self, amount):
+		moneyArr = []
+		for i in range(len(self.players)):
+			moneyArr.append(amount)
+		self.money = moneyArr
 	def cardCount(self, card):
 		value = card.value
 		if value <= 6 and value >= 2:
@@ -154,8 +164,34 @@ class Blackjack:
 	def normal(self):
 		for i in range(1,len(self.players)):
 			player = self.players[i]
+			while (not player.isBusted() and player.maxTotal() < 17):
+				card = self.deck.deal()
+				player.hit(card)
+	def countPlay(self):
+		for i in range(1,len(self.players)):
+			player = self.players[i]
 			score = player.maxTotal()
-			while (not player.isBusted and score < 17):
+			while (not player.isBusted and score < 11):
+				player.hit(card)
+			dealer = self.players[0]
+			while (not player.isBusted()):
+				key = str(player.maxTotal()) + "&" + str(min(10,dealer.hand[1].value)) + "&" + str(self.trueCount())
+				if key in self.hit:
+					hitWin = self.hit[key]["1"] / (self.hit[key]["0"] + self.hit[key]["-1"] + self.hit[key]["1"])
+					standWin = self.stand[key]["1"] / (self.stand[key]["0"] + self.stand[key]["-1"] + self.stand[key]["1"])
+					if standWin < hitWin:
+						card = self.deck.deal()
+						player.hit(card)
+					else:
+						break
+				else:
+					break
+	def onlyStand(self):
+		return
+		for i in range(1,len(self.players)):
+			player = self.players[i]
+			while (not player.isBusted()):
+				card = self.deck.deal()
 				player.hit(card)
 	def playerHit(self):
 		player = self.players[1]
@@ -164,6 +200,8 @@ class Blackjack:
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
+	def receiveMoney(self, player, amount):
+		self.money[player] += amount
 	def winner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
@@ -181,6 +219,7 @@ class Blackjack:
 			else:
 				winners.append(1)
 		return winners
+	
 	def standWinner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
@@ -218,6 +257,9 @@ class Blackjack:
 		self.playerMove()
 		if not self.players[1].isBusted:	
 			blackjack.dealerMove()
+	def trueCount(self):
+		cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
+		return cardCount
 	def result(self):
 		cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
 		self.countDealer();
@@ -234,7 +276,6 @@ class Blackjack:
 		print(self.players[1])
 		print(self.players[1].maxTotal())
 		return ""
-		
 def saveInfo(fileName, arr):
 	f=open(fileName, "r")
 	dict = json.loads(f.read())
@@ -309,17 +350,21 @@ def runCount(times):
 	saveInfo("blackjackHitCount.txt", hitArr)
 	saveInfo("blackjackStandCount.txt", standArr)
 
-def winRate(times):
-	blackjack = Blackjack(1)
+def winRate(blackjack, method, times):
 	blackjack.shuffle()
 	wins = 0
 	for i in range(times):
 		blackjack.deal()
-		blackjack.normal()
+		method()
+		blackjack.dealerMove()
 		result = blackjack.result()
 		if result["winner"] == 1:
 			wins += 1
 	print(str(wins * 100 /times) + "%")
+def numberOfGames(blackjack, method):
+	blackjack.giveMoney(10000)
+	
+	
 
 	
 	
