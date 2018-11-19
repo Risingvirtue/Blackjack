@@ -78,6 +78,15 @@ class Player:
 	def __init__(self):
 		self.hand = []
 		self.prevTotal = 0
+		self.bet = 10
+		self.money = 100
+		self.multiplier = 1
+	def changeBet(self, amount):
+		self.bet = amount
+	def resetMoney(self, amount):
+		self.money = amount
+	def updateMoney(self, sign):
+		self.money += self.multiplier * self.bet * sign
 	def total(self):
 		total = 0
 		hasAce = False
@@ -103,7 +112,6 @@ class Player:
 				return true
 		return false
 	def maxTotal(self):
-	
 		total = self.total()
 		currMax = max(total)
 		if (currMax > 21):
@@ -114,21 +122,16 @@ class Player:
 		return self.maxTotal() > 21
 class Blackjack:
 	def __init__(self, players):
-		hit = open("blackjackHitCount.txt", "r")
-		self.hit = json.loads(hit.read())
-		stand = open("blackjackStandCount.txt", "r")
-		self.stand = json.loads(stand.read())
-		self.deck = Deck(6)
+		#hit = open("blackjackHitCount.txt", "r")
+		#self.hit = json.loads(hit.read())
+		#stand = open("blackjackStandCount.txt", "r")
+		#self.stand = json.loads(stand.read())
+		self.deck = Deck(2)
 		self.count = 0
 		self.players = []
 		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
-	def giveMoney(self, amount):
-		moneyArr = []
-		for i in range(len(self.players)):
-			moneyArr.append(amount)
-		self.money = moneyArr
 	def cardCount(self, card):
 		value = card.value
 		if value <= 6 and value >= 2:
@@ -139,6 +142,7 @@ class Blackjack:
 		self.clearHands()
 		if self.deck.index > len(self.deck.deck) / 2:
 			self.shuffle()
+			self.count = 0
 		for i in range(len(self.players)):
 			player = self.players[i]
 			card = self.deck.deal()
@@ -164,6 +168,14 @@ class Blackjack:
 	def normal(self):
 		for i in range(1,len(self.players)):
 			player = self.players[i]
+			
+			if self.count > 6:
+				player.multiplier = 2
+			elif self.count < -3:
+				player.multiplier = 0.5
+			else:
+				player.multiplier = 1
+			
 			while (not player.isBusted() and player.maxTotal() < 17):
 				card = self.deck.deal()
 				player.hit(card)
@@ -185,7 +197,7 @@ class Blackjack:
 					else:
 						break
 				else:
-					break
+					break	
 	def onlyStand(self):
 		return
 		for i in range(1,len(self.players)):
@@ -200,8 +212,6 @@ class Blackjack:
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
 			dealer.hit(self.deck.deal())
-	def receiveMoney(self, player, amount):
-		self.money[player] += amount
 	def winner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
@@ -210,16 +220,19 @@ class Blackjack:
 			playerValue = player.maxTotal()
 			if (playerValue > 21):
 				winners.append(-1)
+				player.updateMoney(-1)
 			elif (dealerValue > 21):
 				winners.append(1)
+				player.updateMoney(1)
 			elif playerValue < dealerValue:
 				winners.append(-1)
+				player.updateMoney(-1)
 			elif playerValue == dealerValue:
 				winners.append(0)
 			else:
 				winners.append(1)
-		return winners
-	
+				player.updateMoney(1)
+		return winners	
 	def standWinner(self):
 		dealerValue = self.players[0].maxTotal()
 		winners = []
@@ -353,6 +366,8 @@ def runCount(times):
 def winRate(blackjack, method, times):
 	blackjack.shuffle()
 	wins = 0
+	ties = 0
+	losses = 0
 	for i in range(times):
 		blackjack.deal()
 		method()
@@ -360,21 +375,38 @@ def winRate(blackjack, method, times):
 		result = blackjack.result()
 		if result["winner"] == 1:
 			wins += 1
-	print(str(wins * 100 /times) + "%")
+		elif result["winner"] == 0:
+			ties += 1
+		else:
+			losses += 1
+			
+	print("win: " + str(wins * 100 /times) + "%")
+	print("tie: " + str(ties * 100 /times) + "%")
+	print("lose: " + str(losses * 100 /times) + "%")
+
+def money(blackjack, method, times):
+	blackjack.shuffle()
+	player = blackjack.players[1]
+	for i in range(times):
+		blackjack.deal()
+		method()
+		blackjack.dealerMove()
+		result = blackjack.result()
+		
+		if player.money <= 0:
+			#print("Loss at " + str(i) + " wins.")
+			return False
+	#print("Player total $" + str(player.money))
+	return True
+			
 def numberOfGames(blackjack, method):
-	blackjack.giveMoney(10000)
-	
-	
-
-	
-	
-
-
-		
-		
-		
-	
-
-
-
-
+	count = 0
+	player = blackjack.players[1]
+	player.resetMoney(10000)
+	while (player.money > 0 and count < 100000):
+		blackjack.deal()
+		method()
+		blackjack.dealerMove()
+		blackjack.winner()
+		count += 1
+	print(count)
