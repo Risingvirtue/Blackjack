@@ -35,51 +35,44 @@ class Deck:
 	def __init__(self, numDecks):
 		self.deck = []
 		self.index = 0
+        self.numDecks = numDecks
 		self.length = numDecks * 52
+        self.setCut()
+        self.count = 0
+        print(str(self.cut))
 		for k in range(numDecks):
 			for i in range(1, 14):
 				for j in range(4):
 					self.deck.append(Card(i,j))
-	def riffle(self):
-		l = 0
-		m = math.floor(len(self.deck) / 2)
-		r = m
-		newDeck = []
-		while l < m or r < len(self.deck):
-			if l >= m:
-				newDeck.append(self.deck[r])
-				r = r + 1
-			elif r >= len(self.deck):
-				newDeck.append(self.deck[l])
-				l = l + 1
-			else:
-				if random.random() < 0.5:
-					newDeck.append(self.deck[l])
-					l += 1
-				else:
-					newDeck.append(self.deck[r])
-					r += 1
-		self.deck = newDeck
 	def shuffle(self):
 		random.shuffle(self.deck)
 		self.index = 0
+        self.count = 0
+        self.setCut()
+    def setCut(self):
+        self.cut = floor(self.numDecks - random.random() - 1) * 52)
 	def __str__(self):
 		currStr = []
 		for card in self.deck:
 			currStr.append(str(card))
 		return str(currStr)
 	def deal(self):
-		if self.index >= len(self.deck):
-			return None
 		card = self.deck[self.index]
+        self.cardCount(card)
 		self.index = self.index + 1
 		return card
+    def cardCount(self, card):
+		value = card.value
+		if value <= 6 and value >= 2:
+			self.count = self.count + 1
+		elif value >= 10 or value == 1:
+			self.count = self.count - 1
 class Player:
 	def __init__(self):
 		self.hand = []
 		self.prevTotal = 0
 		self.bet = 10
-		self.money = 100
+		self.money = 0
 		self.multiplier = 1
 	def changeBet(self, amount):
 		self.bet = amount
@@ -111,6 +104,8 @@ class Player:
 			if card.value == 1:
 				return true
 		return false
+    def canSplit(self):
+        return self.hand.length == 2 and self.hand[0].value == self.hand[1].value
 	def maxTotal(self):
 		total = self.total()
 		currMax = max(total)
@@ -122,40 +117,23 @@ class Player:
 		return self.maxTotal() > 21
 class Blackjack:
 	def __init__(self, players):
-		#hit = open("blackjackHitCount.txt", "r")
-		#self.hit = json.loads(hit.read())
-		#stand = open("blackjackStandCount.txt", "r")
-		#self.stand = json.loads(stand.read())
-		self.deck = Deck(2)
+		self.deck = Deck(6)
 		self.count = 0
 		self.players = []
 		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
-	def cardCount(self, card):
-		value = card.value
-		if value <= 6 and value >= 2:
-			self.count = self.count + 1
-		elif value >= 10 or value == 1:
-			self.count = self.count - 1
 	def deal(self):
 		self.clearHands()
-		if self.deck.index > len(self.deck.deck) / 2:
-			self.shuffle()
-			self.count = 0
+		if self.deck.index > self.deck.cut:
+			self.deck.shuffle()
 		for i in range(len(self.players)):
-			player = self.players[i]
-			card = self.deck.deal()
-			player.hit(card)
-			if i != 0:
-				self.cardCount(card)
-		for player in self.players:
-			card = self.deck.deal()
-			player.hit(card)
-			self.cardCount(card)
-	def shuffle(self):
-		self.deck.shuffle()
-		self.count = 0
+            for j in range(2): '''deal two cards'''
+                player = self.players[i]
+                card = self.deck.deal()
+                player.hit(card)
+                if i != 0 or j == 0: '''start counting all face up cards'''
+                    self.deck.cardCount(card)
 	def clearHands(self):
 		for player in self.players:
 			player.clear()
