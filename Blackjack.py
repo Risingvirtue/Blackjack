@@ -74,33 +74,38 @@ class Player:
 		self.bet = 10
 		self.money = 0
 		self.multiplier = 1
+        self.hands = []
 	def changeBet(self, amount):
 		self.bet = amount
 	def resetMoney(self, amount):
 		self.money = amount
 	def updateMoney(self, sign):
 		self.money += self.multiplier * self.bet * sign
-	def total(self):
+	def total(self, hand=self.hand):
 		total = 0
 		hasAce = False
-		for card in self.hand:
+		for card in hand:
 			if card.value == 1:
 				hasAce = True
 			total += min(card.value, 10)
 		if hasAce:
 			return [total, total + 10]
 		return [total]
-	def hit(self, card):
-		self.hand.append(card)
+	def hit(self, card, hand=-1):
+        if hand != -1:
+            self.hands[hand].append(card)
+        else:
+            self.hand.append(card)
 	def clear(self):
 		self.hand = []
+        self.hands = []
 	def __str__(self):
 		handArr = []
 		for card in self.hand:
 			handArr.append(str(card))
 		return str(handArr)
-	def hasAce(self):
-		for card in self.hand:
+	def hasAce(self, hand):
+		for card in hand:
 			if card.value == 1:
 				return true
 		return false
@@ -115,6 +120,51 @@ class Player:
 			return currMax
 	def isBusted(self):
 		return self.maxTotal() > 21
+    def play(self, faceUp, deck):
+        currHand = self.hand
+        currIndex = -1
+        while True:
+            strategy = self.basicStrategy(currHand, faceUp, deck)
+            if strategy == 'Split':
+                newHand = [currHand.pop()]
+                currHand.append(deck.deal())
+                newHand.append(deck.deal())
+                self.hands.append(newHand)
+            elif strategy == 'Hit':
+                currHand.append(deck.deal())
+            elif strategy == 'Stand':
+                if self.hands.length() == currIndex + 1:
+                    return
+                else:
+                    currIndex += 1
+                    currHand = self.hands[currIndex]
+    def basicStrategy(self, hand, faceUp, deck):
+        if self.canSplit():
+            if hand[0].value == 2 or \
+               hand[0].value == 3 or \
+               hand[0].value == 7:
+                if faceUp.value <= 7:
+                    return 'Split'
+                else:
+                    return 'Hit'
+                    
+            elif hand[0].value == 4:
+                if faceUp.value == 5 or faceUp.value == 6:
+                    return 'Split'
+                else:
+                    return 'Hit'
+            elif hand[0].value == 6:
+                if faceUp.value <= 6:
+                    return 'Split'
+                else:
+                    return 'Hit'
+            elif hand[0].value == 8 or hand[0].value == 1:
+                return 'Split'
+            else:
+                return 'Stand'
+        elif self.hasAce(hand):
+            
+        
 class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck(6)
@@ -155,32 +205,6 @@ class Blackjack:
 				player.multiplier = 1
 			
 			while (not player.isBusted() and player.maxTotal() < 17):
-				card = self.deck.deal()
-				player.hit(card)
-	def countPlay(self):
-		for i in range(1,len(self.players)):
-			player = self.players[i]
-			score = player.maxTotal()
-			while (not player.isBusted and score < 11):
-				player.hit(card)
-			dealer = self.players[0]
-			while (not player.isBusted()):
-				key = str(player.maxTotal()) + "&" + str(min(10,dealer.hand[1].value)) + "&" + str(self.trueCount())
-				if key in self.hit:
-					hitWin = self.hit[key]["1"] / (self.hit[key]["0"] + self.hit[key]["-1"] + self.hit[key]["1"])
-					standWin = self.stand[key]["1"] / (self.stand[key]["0"] + self.stand[key]["-1"] + self.stand[key]["1"])
-					if standWin < hitWin:
-						card = self.deck.deal()
-						player.hit(card)
-					else:
-						break
-				else:
-					break	
-	def onlyStand(self):
-		return
-		for i in range(1,len(self.players)):
-			player = self.players[i]
-			while (not player.isBusted()):
 				card = self.deck.deal()
 				player.hit(card)
 	def playerHit(self):
