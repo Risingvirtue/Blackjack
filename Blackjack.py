@@ -69,19 +69,19 @@ class Deck:
 			self.count = self.count - 1
 class Player:
 	def __init__(self):
-		self.hand = []
+		self.hand = [[]]
 		self.prevTotal = 0
 		self.bet = 10
 		self.money = 0
 		self.multiplier = 1
-        self.hands = []
+        self.bets = [self.bet * self.multiplier]
 	def changeBet(self, amount):
 		self.bet = amount
 	def resetMoney(self, amount):
 		self.money = amount
 	def updateMoney(self, sign):
 		self.money += self.multiplier * self.bet * sign
-	def total(self, hand=self.hand):
+	def getTotal(self, hand=self.hand):
 		total = 0
 		hasAce = False
 		for card in hand:
@@ -89,16 +89,19 @@ class Player:
 				hasAce = True
 			total += min(card.value, 10)
 		if hasAce:
-			return [total, total + 10]
+            if total + 10 > 21:
+                return [total]
+            else:  
+                return [total, total + 10]
 		return [total]
-	def hit(self, card, hand=-1):
-        if hand != -1:
+	def hit(self, card, hand=0):
+        if hand != 0:
             self.hands[hand].append(card)
         else:
             self.hand.append(card)
 	def clear(self):
-		self.hand = []
-        self.hands = []
+		self.hand = [[]]
+        self.bets = [self.multiplier * self.bet]
 	def __str__(self):
 		handArr = []
 		for card in self.hand:
@@ -111,60 +114,115 @@ class Player:
 		return false
     def canSplit(self):
         return self.hand.length == 2 and self.hand[0].value == self.hand[1].value
-	def maxTotal(self):
-		total = self.total()
-		currMax = max(total)
-		if (currMax > 21):
-			return min(total)
-		else:
-			return currMax
 	def isBusted(self):
 		return self.maxTotal() > 21
     def play(self, faceUp, deck):
-        currHand = self.hand
-        currIndex = -1
+        currHand = self.hand[0]
+        currIndex = 0
         while True:
-            strategy = self.basicStrategy(currHand, faceUp, deck)
+            strategy = self.basicStrategy(currHand, faceUp.value)
             if strategy == 'Split':
                 newHand = [currHand.pop()]
                 currHand.append(deck.deal())
                 newHand.append(deck.deal())
-                self.hands.append(newHand)
+                self.hand.append(newHand)
             elif strategy == 'Hit':
                 currHand.append(deck.deal())
+            elif strategy == 'Double':
+                currHand.append(deck.deal())
+                self.bets[currIndex] *= 2
             elif strategy == 'Stand':
-                if self.hands.length() == currIndex + 1:
+                if self.hand.length() == currIndex:
                     return
                 else:
                     currIndex += 1
                     currHand = self.hands[currIndex]
-    def basicStrategy(self, hand, faceUp, deck):
-        if self.canSplit():
+    def basicStrategy(self, hand, faceUp):
+        total = self.getTotal()
+        if self.canSplit() and hand[0].value != 5:
             if hand[0].value == 2 or \
                hand[0].value == 3 or \
                hand[0].value == 7:
-                if faceUp.value <= 7:
+                if faceUp <= 7 and faceUp != 1:
                     return 'Split'
                 else:
                     return 'Hit'
                     
             elif hand[0].value == 4:
-                if faceUp.value == 5 or faceUp.value == 6:
+                if faceUp == 5 or faceUp == 6:
                     return 'Split'
                 else:
                     return 'Hit'
             elif hand[0].value == 6:
-                if faceUp.value <= 6:
+                if faceUp <= 6 and faceUp != 1:
                     return 'Split'
                 else:
                     return 'Hit'
             elif hand[0].value == 8 or hand[0].value == 1:
                 return 'Split'
-            else:
+            elif hand[0].value == 9:
+                if faceUp == 7 or faceUp >= 10 or faceUp == 1:
+                    return 'Stand'
+                else:
+                    return 'Split'
+        elif total.length() == 2: #has an ace and soft
+            canDouble = hand.length() == 2
+            if total[1] >= 19:
                 return 'Stand'
-        elif self.hasAce(hand):
-            
-        
+            elif total[1] == 18:
+                if faceUp == 2 or faceUp == 7 or faceUp == 8:
+                    return 'Stand'
+                elif faceUp >= 3 and faceUp <=6:
+                    return 'Double' if canDouble else 'Stand'
+                else:
+                    return 'Hit'
+            elif total[1] == 17:
+                if faceUp >= 3 and faceUp <= 6:
+                    return 'Double' if canDouble else 'Hit'
+                else:
+                    return 'Hit'
+            elif total[1] == 16 or total[1] == 15:
+                if faceUp >= 4 and faceUp <= 6:
+                    return 'Double' if canDouble else 'Hit'
+                else:
+                    return 'Hit'
+            elif total[1] == 14 or total == 13:
+                if faceUp >= 5 and faceUp <= 6:
+                    return 'Double' if canDouble else 'Hit'
+                else:
+                    return 'Hit'
+        else:
+            canDouble = hand.length() == 2
+            if total[0] >= 17:
+                return 'Stand'
+            elif total[0] >= 13 and total[0] <= 16:
+                if faceUp >= 2 and faceUp <= 6:
+                    return 'Stand'
+                else:
+                    return 'Hit'
+            elif total[0] == 12:
+                if faceUp >= 4 and faceUp <=6:
+                    return 'Stand'
+                else:
+                    return 'Hit'
+            elif total[0] == 11:
+                if faceUp == 1:
+                    return 'Hit'
+                else:
+                    return 'Double' if canDouble else 'Hit'
+            elif total[0] == 10:
+                if faceUp >= 2 and faceUp <= 9:
+                    return 'Double' if canDouble else 'Hit'
+                else:
+                    return 'Hit'
+            elif total[0] == 9:
+                if faceUp >= 3 and faceUp <= 6:
+                    return 'Double' if canDouble else 'Hit'
+                else:
+                    return 'Hit'
+            else:
+                return 'Hit'
+                
 class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck(6)
@@ -291,100 +349,11 @@ class Blackjack:
 		print(self.players[1])
 		print(self.players[1].maxTotal())
 		return ""
-def saveInfo(fileName, arr):
-	f=open(fileName, "r")
-	dict = json.loads(f.read())
-	for result in arr:
-		key = ""
-		if "count" in result:
-			key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"]) + "&" + str(result["count"])
-		else:
-			key = str(result["lastValue"]) + "&" + str(result["dealerFaceUp"])
-		if (key not in dict):
-			dict[key] = {"0": 0, "-1": 0, "1": 0}
-		dict[key][str(result["winner"])] += 1
-	f = open(fileName,"w+")
-	f.write(json.dumps(dict))
-	f.close()
-def wipeSaves():
-	f = open("blackjackHitCount.txt","w+")
-	f.write(json.dumps({}))
-	f.close()
-
-	f = open("blackjackStandCount.txt","w+")
-	f.write(json.dumps({}))
-	f.close()
-
 def runPlays(times):
 	blackjack = Blackjack(1)
 	blackjack.shuffle()
 	standArr = []
 	hitArr = []
-	for i in range(times):
-		if i % 100000 == 0:
-			print(i)
-			saveInfo("blackjackHit.txt", hitArr)
-			saveInfo("blackjackStand.txt", standArr)
-			standArr = []
-			hitArr = []
-		blackjack.deal()
-		blackjack.playerMove()
-		blackjack.dealerMove()
-		winner = blackjack.winner()[0]
-		standWinner = blackjack.standWinner()[0]
-		lastValue = blackjack.lastPlayerValue(0)
-		dealerFaceUp = blackjack.dealerFaceUp()
-		standArr.append({"winner": standWinner, "lastValue": lastValue, "dealerFaceUp": dealerFaceUp})
-		hitArr.append({"winner": winner, "lastValue": lastValue, "dealerFaceUp": dealerFaceUp})
-		blackjack.shuffle()
-	saveInfo("blackjackHit.txt", hitArr)
-	saveInfo("blackjackStand.txt", standArr)
-def runCount(times):
-	blackjack = Blackjack(1)
-	blackjack.shuffle()
-	standArr = []
-	hitArr = []
-	maxCount = 0
-	for i in range(times):
-		if i % 100000 == 0:
-			print(i)
-			saveInfo("blackjackHitCount.txt", hitArr)
-			saveInfo("blackjackStandCount.txt", standArr)
-			standArr = []
-			hitArr = []
-		blackjack.play()
-		result = blackjack.result()
-		standArr.append({"winner": result["standWinner"], 
-						"lastValue": result["lastValue"], 
-						"dealerFaceUp": result["dealerFaceUp"],
-						"count": result["cardCount"]})
-		hitArr.append({"winner": result["winner"], 
-						"lastValue": result["lastValue"], 
-						"dealerFaceUp": result["dealerFaceUp"],
-						"count": result["cardCount"]})
-	saveInfo("blackjackHitCount.txt", hitArr)
-	saveInfo("blackjackStandCount.txt", standArr)
-
-def winRate(blackjack, method, times):
-	blackjack.shuffle()
-	wins = 0
-	ties = 0
-	losses = 0
-	for i in range(times):
-		blackjack.deal()
-		method()
-		blackjack.dealerMove()
-		result = blackjack.result()
-		if result["winner"] == 1:
-			wins += 1
-		elif result["winner"] == 0:
-			ties += 1
-		else:
-			losses += 1
-			
-	print("win: " + str(wins * 100 /times) + "%")
-	print("tie: " + str(ties * 100 /times) + "%")
-	print("lose: " + str(losses * 100 /times) + "%")
 
 def money(blackjack, method, times):
 	blackjack.shuffle()
