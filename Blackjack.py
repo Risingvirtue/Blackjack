@@ -32,18 +32,18 @@ class Card:
 			currStr += " Spades"
 		return currStr
 class Deck:
-	def __init__(self, numDecks):
-		self.deck = []
-		self.index = 0
+    def __init__(self, numDecks):
+        self.deck = []
+        self.index = 0
         self.numDecks = numDecks
-		self.length = numDecks * 52
+        self.length = numDecks * 52
         self.setCut()
         self.count = 0
         print(str(self.cut))
-		for k in range(numDecks):
-			for i in range(1, 14):
-				for j in range(4):
-					self.deck.append(Card(i,j))
+        for k in range(numDecks):
+            for i in range(1, 14):
+                for j in range(4):
+                    self.deck.append(Card(i,j))
 	def shuffle(self):
 		random.shuffle(self.deck)
 		self.index = 0
@@ -226,11 +226,12 @@ class Player:
 class Blackjack:
 	def __init__(self, players):
 		self.deck = Deck(6)
-		self.count = 0
 		self.players = []
 		self.players.append(Player()) #dealer
 		for i in range(players):
 			self.players.append(Player())
+    def shuffle(self):
+        self.deck.shuffle()
 	def deal(self):
 		self.clearHands()
 		if self.deck.index > self.deck.cut:
@@ -251,23 +252,6 @@ class Blackjack:
 			player.prevTotal = player.maxTotal()
 			card = self.deck.deal()
 			player.hit(card)
-	def normal(self):
-		for i in range(1,len(self.players)):
-			player = self.players[i]
-			
-			if self.count > 6:
-				player.multiplier = 2
-			elif self.count < -3:
-				player.multiplier = 0.5
-			else:
-				player.multiplier = 1
-			
-			while (not player.isBusted() and player.maxTotal() < 17):
-				card = self.deck.deal()
-				player.hit(card)
-	def playerHit(self):
-		player = self.players[1]
-		player.hit(self.deck.deal())
 	def dealerMove(self):
 		dealer = self.players[0]
 		while dealer.maxTotal() < 17:
@@ -293,21 +277,6 @@ class Blackjack:
 				winners.append(1)
 				player.updateMoney(1)
 		return winners	
-	def standWinner(self):
-		dealerValue = self.players[0].maxTotal()
-		winners = []
-		for i in range(1, len(self.players)):
-			player = self.players[i]
-			playerValue = player.prevTotal
-			if dealerValue > 21:
-				winners.append(1)
-			if playerValue < dealerValue:
-				winners.append(-1)
-			elif playerValue == dealerValue:
-				winners.append(0)
-			else:
-				winners.append(1)
-		return winners
 	def countDealer(self):
 		dealer = self.players[0]
 		self.cardCount(dealer.hand[0])
@@ -352,24 +321,9 @@ class Blackjack:
 def runPlays(times):
 	blackjack = Blackjack(1)
 	blackjack.shuffle()
-	standArr = []
-	hitArr = []
-
-def money(blackjack, method, times):
-	blackjack.shuffle()
-	player = blackjack.players[1]
-	for i in range(times):
-		blackjack.deal()
-		method()
-		blackjack.dealerMove()
-		result = blackjack.result()
-		
-		if player.money <= 0:
-			#print("Loss at " + str(i) + " wins.")
-			return False
-	#print("Player total $" + str(player.money))
-	return True
-			
+	blackjack.deal()
+    print(blackjack)
+runPlays(1)
 def numberOfGames(blackjack, method):
 	count = 0
 	player = blackjack.players[1]
