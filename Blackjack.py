@@ -131,7 +131,12 @@ class Player:
     def play(self, faceUp, deck):
         currHand = self.hand[0]
         currIndex = 0
+
         while True:
+            if len(self.hand) == currIndex:
+                return True
+            else:
+                currHand = self.hand[currIndex]
             strategy = self.basicStrategy(currHand, faceUp.value)
             if strategy == 'Split':
                 newHand = [currHand.pop()]
@@ -144,12 +149,9 @@ class Player:
             elif strategy == 'Double':
                 currHand.append(deck.deal())
                 self.bets[currIndex] *= 2
+                currIndex += 1
             elif strategy == 'Stand':
                 currIndex += 1
-                if len(self.hand) == currIndex:
-                    return True
-                else:
-                    currHand = self.hand[currIndex]
             else:
                 print('currHand')
                 for i in range(len(currHand)):
@@ -255,6 +257,7 @@ class Blackjack:
     def deal(self):
         self.clearHands()
         if self.deck.index > self.deck.cut:
+            print('shuffle')
             self.deck.shuffle()
         for i in range(len(self.players)):
             for j in range(2): #deal two cards
@@ -269,7 +272,6 @@ class Blackjack:
     def playerMove(self):
         dealer = self.players[0]
         if dealer.hasBlackjack():
-            print(dealer)
             return
         for i in range(1,len(self.players)):
             player = self.players[i]
@@ -286,35 +288,31 @@ class Blackjack:
             for j in range(len(player.hand)):
                 currHand = player.hand[j]
                 currTotal = player.maxTotal(j)
-                if currTotal > 21 or currTotal < dealerTotal:
+                if currTotal > 21: #if player busted
                     player.money -= player.bets[j]
+                    #print('busted remove ' + str(player.bets[j]))
                 elif currTotal == 21 and len(currHand) == 2 \
-                    and not (dealerTotal == 21 and len(dealerHand) == 2):
+                    and not (dealerTotal == 21 and len(dealerHand) == 2): #if blackjack
                     player.money += player.bets[j] * 3 / 2
-                elif currTotal > dealerTotal:
+                    #print('blackjack add ' + str(player.bets[j] * 3 / 2))
+                elif dealerTotal > 21 or currTotal > dealerTotal: #dealer busted or greater than dealer
                     player.money += player.bets[j]
+                    #print('dealer busted ' + str(player.bets[j]))
+                elif currTotal < dealerTotal:
+                    player.money -= player.bets[j]
+                    #print('dealer wins ' + str(player.bets[j]))
+                
     def countDealer(self):
         dealer = self.players[0]
         self.cardCount(dealer.hand[0])
         player = self.players[1]
         for i in range(2, len(player.hand)):
             self.cardCount(player.hand[i])
-    def lastPlayerValue(self, player):
-        if player + 1 >= len(self.players):
-            return None
-        else:
-            return self.players[player + 1].prevTotal
-    def dealerFaceUp(self):
-        dealer = self.players[0]
-        return min(dealer.hand[1].value, 10)
-    def dealerFaceDown(self):
-        dealer = self.players[0]
-        return min(dealer.hand[0].value, 10)
     def play(self):
         self.deal()
         self.playerMove()
-        if not self.players[1].isBusted:    
-            blackjack.dealerMove()
+        self.dealerMove()
+        self.winner()
     def trueCount(self):
         cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
         return cardCount
@@ -333,17 +331,16 @@ class Blackjack:
         print("Player: ")
         print(self.players[1])
         print(self.players[1].getTotal())
+        print("playerMoney: " + str(self.players[1].money))
         return ""
 def runPlays(times):
     blackjack = Blackjack(1)
     blackjack.shuffle()
     
     for i in range(times):
-        blackjack.deal()
-        blackjack.playerMove()
-        blackjack.dealerMove()
-        #print(blackjack)
-runPlays(10)
+        blackjack.play()
+    print(blackjack)
+runPlays(1000000)
 def numberOfGames(blackjack, method):
     count = 0
     player = blackjack.players[1]
