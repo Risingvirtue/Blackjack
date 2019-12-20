@@ -58,7 +58,7 @@ class Deck:
     def deal(self):
         card = self.deck[self.index]
         self.cardCount(card)
-        self.index = self.index + 1
+        self.index += 1
         return card
     def cardCount(self, card):
         value = card.value
@@ -131,7 +131,6 @@ class Player:
     def play(self, faceUp, deck):
         currHand = self.hand[0]
         currIndex = 0
-
         while True:
             if len(self.hand) == currIndex:
                 return True
@@ -158,7 +157,7 @@ class Player:
                     print(currHand[i])
                 return None
     def basicStrategy(self, hand, faceUp):
-        total = self.getTotal()
+        total = self.getTotal(hand)
         if self.canSplit(hand) and hand[0].value != 5:
             if hand[0].value == 2 or \
                hand[0].value == 3 or \
@@ -215,29 +214,30 @@ class Player:
                     return 'Hit'
         else:
             canDouble = len(hand) == 2
-            if total[0] >= 17:
+            maxTotal = total[len(total) - 1]
+            if maxTotal >= 17:
                 return 'Stand'
-            elif total[0] >= 13 and total[0] <= 16:
+            elif maxTotal >= 13 and maxTotal <= 16:
                 if faceUp >= 2 and faceUp <= 6:
                     return 'Stand'
                 else:
                     return 'Hit'
-            elif total[0] == 12:
+            elif maxTotal == 12:
                 if faceUp >= 4 and faceUp <=6:
                     return 'Stand'
                 else:
                     return 'Hit'
-            elif total[0] == 11:
+            elif maxTotal == 11:
                 if faceUp == 1:
                     return 'Hit'
                 else:
                     return 'Double' if canDouble else 'Hit'
-            elif total[0] == 10:
+            elif maxTotal == 10:
                 if faceUp >= 2 and faceUp <= 9:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
-            elif total[0] == 9:
+            elif maxTotal == 9:
                 if faceUp >= 3 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
@@ -257,7 +257,6 @@ class Blackjack:
     def deal(self):
         self.clearHands()
         if self.deck.index > self.deck.cut:
-            print('shuffle')
             self.deck.shuffle()
         for i in range(len(self.players)):
             for j in range(2): #deal two cards
@@ -297,7 +296,7 @@ class Blackjack:
                     #print('blackjack add ' + str(player.bets[j] * 3 / 2))
                 elif dealerTotal > 21 or currTotal > dealerTotal: #dealer busted or greater than dealer
                     player.money += player.bets[j]
-                    #print('dealer busted ' + str(player.bets[j]))
+                    #print('dealer busted or greater than dealer' + str(player.bets[j]))
                 elif currTotal < dealerTotal:
                     player.money -= player.bets[j]
                     #print('dealer wins ' + str(player.bets[j]))
@@ -338,6 +337,8 @@ def runPlays(times):
     blackjack.shuffle()
     
     for i in range(times):
+        if i % 100000 == 0:
+            print(i)
         blackjack.play()
     print(blackjack)
 runPlays(1000000)
