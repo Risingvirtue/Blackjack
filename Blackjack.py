@@ -8,8 +8,8 @@ class Suit:
     Spade = 3
 class Card:
     def __init__(self, value, suit):
-        self.value = value;
-        self.suit = suit;
+        self.value = value
+        self.suit = suit
     def __str__(self):
         currStr = ""
         if self.value == 1:
@@ -74,6 +74,8 @@ class Player:
         self.money = 0
         self.multiplier = 1
         self.bets = [self.bet * self.multiplier]
+    def getFaceUp(self):
+        return self.hand[0][0]
     def changeBet(self, amount):
         self.bet = amount
     def resetMoney(self, amount):
@@ -95,8 +97,8 @@ class Player:
             else:  
                 return [total, total + 10]
         return [total]
-    def hit(self, card, hand=0):
-        self.hand[hand].append(card)
+    def hit(self, card, handNum=0):
+        self.hand[handNum].append(card)
     def clear(self):
         self.hand = [[]]
         self.bets = [self.multiplier * self.bet]
@@ -113,12 +115,19 @@ class Player:
             if card.value == 1:
                 return true
         return false
-    def canSplit(self):
-        return self.hand.length == 2 and self.hand[0].value == self.hand[1].value
+    def hasBlackjack(self, handNum=0):
+        hand = self.hand[handNum]
+        if self.maxTotal(handNum) == 21 and len(hand) == 2:
+            return True
+        else:
+            return False
+    def canSplit(self, hand):
+        return len(hand) == 2 and hand[0].value == hand[1].value
     def isBusted(self, hand):
         return self.maxTotal(hand) > 21
-    def maxTotal(self, hand):
-        return hand[hand.length() - 1]
+    def maxTotal(self, handNum=0):
+        total = self.getTotal(self.hand[handNum])
+        return total[len(total) - 1]
     def play(self, faceUp, deck):
         currHand = self.hand[0]
         currIndex = 0
@@ -129,20 +138,26 @@ class Player:
                 currHand.append(deck.deal())
                 newHand.append(deck.deal())
                 self.hand.append(newHand)
+                self.bets.append(self.bet * self.multiplier)
             elif strategy == 'Hit':
                 currHand.append(deck.deal())
             elif strategy == 'Double':
                 currHand.append(deck.deal())
                 self.bets[currIndex] *= 2
             elif strategy == 'Stand':
-                if self.hand.length() == currIndex:
-                    return
+                currIndex += 1
+                if len(self.hand) == currIndex:
+                    return True
                 else:
-                    currIndex += 1
-                    currHand = self.hands[currIndex]
+                    currHand = self.hand[currIndex]
+            else:
+                print('currHand')
+                for i in range(len(currHand)):
+                    print(currHand[i])
+                return None
     def basicStrategy(self, hand, faceUp):
         total = self.getTotal()
-        if self.canSplit() and hand[0].value != 5:
+        if self.canSplit(hand) and hand[0].value != 5:
             if hand[0].value == 2 or \
                hand[0].value == 3 or \
                hand[0].value == 7:
@@ -168,8 +183,10 @@ class Player:
                     return 'Stand'
                 else:
                     return 'Split'
-        elif total.length() == 2: #has an ace and soft
-            canDouble = hand.length() == 2
+            else:
+                return 'Stand'
+        elif len(total) == 2: #has an ace and soft
+            canDouble = len(hand) == 2
             if total[1] >= 19:
                 return 'Stand'
             elif total[1] == 18:
@@ -189,13 +206,13 @@ class Player:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
-            elif total[1] == 14 or total == 13:
+            elif total[1] == 14 or total[1] == 13:
                 if faceUp >= 5 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
         else:
-            canDouble = hand.length() == 2
+            canDouble = len(hand) == 2
             if total[0] >= 17:
                 return 'Stand'
             elif total[0] >= 13 and total[0] <= 16:
@@ -250,36 +267,32 @@ class Blackjack:
         for player in self.players:
             player.clear()
     def playerMove(self):
+        dealer = self.players[0]
+        if dealer.hasBlackjack():
+            print(dealer)
+            return
         for i in range(1,len(self.players)):
             player = self.players[i]
-            player.prevTotal = player.maxTotal()
-            card = self.deck.deal()
-            player.hit(card)
+            player.play(self.players[0].getFaceUp(), self.deck)
     def dealerMove(self):
         dealer = self.players[0]
         while dealer.maxTotal() < 17:
             dealer.hit(self.deck.deal())
     def winner(self):
-        dealerValue = self.players[0].maxTotal()
-        winners = []
+        dealerTotal = self.players[0].maxTotal()
+        dealerHand = self.players[0].hand[0]
         for i in range(1, len(self.players)):
             player = self.players[i]
-            playerValue = player.maxTotal()
-            if (playerValue > 21):
-                winners.append(-1)
-                player.updateMoney(-1)
-            elif (dealerValue > 21):
-                winners.append(1)
-                player.updateMoney(1)
-            elif playerValue < dealerValue:
-                winners.append(-1)
-                player.updateMoney(-1)
-            elif playerValue == dealerValue:
-                winners.append(0)
-            else:
-                winners.append(1)
-                player.updateMoney(1)
-        return winners    
+            for j in range(len(player.hand)):
+                currHand = player.hand[j]
+                currTotal = player.maxTotal(j)
+                if currTotal > 21 or currTotal < dealerTotal:
+                    player.money -= player.bets[j]
+                elif currTotal == 21 and len(currHand) == 2 \
+                    and not (dealerTotal == 21 and len(dealerHand) == 2):
+                    player.money += player.bets[j] * 3 / 2
+                elif currTotal > dealerTotal:
+                    player.money += player.bets[j]
     def countDealer(self):
         dealer = self.players[0]
         self.cardCount(dealer.hand[0])
@@ -307,7 +320,7 @@ class Blackjack:
         return cardCount
     def result(self):
         cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
-        self.countDealer();
+        self.countDealer()
         return {"winner": self.winner()[0], 
                 "standWinner": self.standWinner()[0], 
                 "lastValue": self.lastPlayerValue(0), 
@@ -324,9 +337,13 @@ class Blackjack:
 def runPlays(times):
     blackjack = Blackjack(1)
     blackjack.shuffle()
-    blackjack.deal()
-    print(blackjack)
-runPlays(1)
+    
+    for i in range(times):
+        blackjack.deal()
+        blackjack.playerMove()
+        blackjack.dealerMove()
+        #print(blackjack)
+runPlays(10)
 def numberOfGames(blackjack, method):
     count = 0
     player = blackjack.players[1]
