@@ -66,6 +66,9 @@ class Deck:
             self.count = self.count + 1
         elif value >= 10 or value == 1:
             self.count = self.count - 1
+    def getTrueCount(self):
+        trueCount = round(self.count * 52 / (len(self.deck) - self.index))
+        return trueCount
 class Player:
     def __init__(self):
         self.hand = [[]]
@@ -82,6 +85,18 @@ class Player:
         self.money = amount
     def updateMoney(self, sign):
         self.money += self.multiplier * self.bet * sign
+    def adjustMultiplier(self, trueCount):
+        if trueCount < 2:
+            self.bet = 10
+        elif trueCount < 3:
+            self.bet = 25
+        elif trueCount < 4:
+            self.bet = 50
+        elif trueCount < 5:
+            self.bet = 75
+        else:
+            self.bet = 100
+            
     def getTotal(self, hand = None):
         if hand == None:
             hand = self.hand[0]
@@ -308,13 +323,16 @@ class Blackjack:
         for i in range(2, len(player.hand)):
             self.cardCount(player.hand[i])
     def play(self):
+        self.adjustMultiplier()
         self.deal()
         self.playerMove()
         self.dealerMove()
         self.winner()
-    def trueCount(self):
-        cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
-        return cardCount
+    def adjustMultiplier(self):
+        trueCount = self.deck.getTrueCount()
+        for i in range(1, len(self.players)):
+            player = self.players[i]
+            player.adjustMultiplier(trueCount)
     def result(self):
         cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
         self.countDealer()
