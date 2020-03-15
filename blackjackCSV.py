@@ -32,7 +32,6 @@ def csvCombine(file1, file2, saveFile):
 	saveFile = open(saveFile, "w+")
 	saveFile.write(contents)
 	saveFile.close()
-	
 #csvConvert("blackjackHitCount.txt", "hitCSVCount.csv")
 #csvConvert("blackjackStandCount.txt", "standCSVCount.csv")
 csvCombine("blackjackHitCount.txt", "blackjackStandCount.txt", "combineCount.csv")
