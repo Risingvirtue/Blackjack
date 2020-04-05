@@ -140,7 +140,6 @@ class Player:
         self.maxMoney = max(self.maxMoney, self.money)
     def adjustMultiplier(self, trueCount):
         self.count += 1
-        
         if trueCount < 2:
             self.bet = 10
             self.currMultiplier = 0
@@ -157,8 +156,7 @@ class Player:
             self.bet = 150
             self.currMultiplier = 4
         else:
-            self.bet = 200
-        
+            self.bet = 200  
     def addMultiplierWinner(self, amount=1):
         self.multiplierWin[self.currMultiplier] += amount
         self.countCount[self.currMultiplier] += 1
@@ -220,9 +218,9 @@ class Player:
             else:
                 currHand = self.hand[currIndex]
             strategy = self.basicStrategy(currHand, faceUp.value)
-            illustrious18 = self.illustrious18(currHand, faceUp.value, deck.getTrueCount())
-            if illustrious18:
-                strategy = illustrious18
+            #illustrious18 = self.illustrious18(currHand, faceUp.value, deck.getTrueCount())
+            #if illustrious18:
+                #strategy = illustrious18
             if strategy == 'Split':
                 newHand = [currHand.pop()]
                 currHand.append(deck.deal())
