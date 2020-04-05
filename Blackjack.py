@@ -53,6 +53,11 @@ class Deck:
         multiplier = 0.9
         if self.numDecks == 6:
             multiplier = 1.5
+        elif self.numDecks == 2:
+            multiplier = 0.9
+        elif self.numDecks == 1:
+            mltiplier = 0.5
+            
         #self.cut = math.floor((self.numDecks - random.random() - 1) * 52)
         self.cut = math.floor((self.numDecks - multiplier) * 52)
     def __str__(self):
@@ -66,7 +71,6 @@ class Deck:
         self.index += 1
         return card
     def cardCount(self, card):
-        
         self.hiLo(card)
         #self.zenCount(card)
         #self.KOCount(card)
@@ -136,22 +140,25 @@ class Player:
         self.maxMoney = max(self.maxMoney, self.money)
     def adjustMultiplier(self, trueCount):
         self.count += 1
+        
         if trueCount < 2:
-            self.bet = 5
+            self.bet = 10
             self.currMultiplier = 0
         elif trueCount == 2:
-            self.bet = 15
+            self.bet = 30
             self.currMultiplier = 1
         elif trueCount == 3:
-            self.bet = 30
+            self.bet = 50
             self.currMultiplier = 2
         elif trueCount == 4:
-            self.bet = 60
-            self.currMultiplier = 3
-        else:
             self.bet = 100
+            self.currMultiplier = 3
+        elif trueCount == 5:
+            self.bet = 150
             self.currMultiplier = 4
-        #self.bet = 5
+        else:
+            self.bet = 200
+        
     def addMultiplierWinner(self, amount=1):
         self.multiplierWin[self.currMultiplier] += amount
         self.countCount[self.currMultiplier] += 1
@@ -213,7 +220,9 @@ class Player:
             else:
                 currHand = self.hand[currIndex]
             strategy = self.basicStrategy(currHand, faceUp.value)
-            #strategy = self.dealerStrategy(currHand)
+            illustrious18 = self.illustrious18(currHand, faceUp.value, deck.getTrueCount())
+            if illustrious18:
+                strategy = illustrious18
             if strategy == 'Split':
                 newHand = [currHand.pop()]
                 currHand.append(deck.deal())
@@ -231,9 +240,6 @@ class Player:
             elif strategy == 'Stand':
                 currIndex += 1
             else:
-                
-                for i in range(len(currHand)):
-                    print(currHand[i])
                 return None
     def dealerStrategy(self, hand):
         total = self.getTotal(hand)
@@ -256,13 +262,16 @@ class Player:
         total = self.getTotal(hand)
         if self.canSplit(hand) and hand[0].value != 5:
             if hand[0].value == 2 or \
-               hand[0].value == 3 or \
-               hand[0].value == 7:
+               hand[0].value == 3:
                 if faceUp <= 7 and faceUp != 1:
                     return 'Split'
                 else:
                     return 'Hit'
-                    
+            elif hand[0].value == 7:
+                if faceUp <= 8 and faceUp != 1:
+                    return 'Split'
+                else:
+                    return 'Hit'
             elif hand[0].value == 4:
                 if faceUp == 5 or faceUp == 6:
                     return 'Split'
@@ -285,25 +294,28 @@ class Player:
         elif len(total) == 2: #has an ace and soft
             canDouble = len(hand) == 2
             if total[1] >= 19:
-                return 'Stand'
+                if faceUp == 6:  
+                    return 'Double'
+                else:
+                    return 'Stand'
             elif total[1] == 18:
-                if faceUp == 2 or faceUp == 7 or faceUp == 8:
+                if faceUp == 7 or faceUp == 8:
                     return 'Stand'
                 elif faceUp >= 3 and faceUp <=6:
                     return 'Double' if canDouble else 'Stand'
                 else:
                     return 'Hit'
-            elif total[1] == 17:
+            elif total[1] == 17 or total[1] == 16:
                 if faceUp >= 3 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
-            elif total[1] == 16 or total[1] == 15:
+            elif total[1] == 15 or total[1] == 14:
                 if faceUp >= 4 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
-            elif total[1] == 14 or total[1] == 13:
+            elif total[1] == 13:
                 if faceUp >= 5 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
@@ -324,23 +336,91 @@ class Player:
                 else:
                     return 'Hit'
             elif maxTotal == 11:
-                if faceUp == 1:
-                    return 'Hit'
-                else:
-                    return 'Double' if canDouble else 'Hit'
+                return 'Double' if canDouble else 'Hit'
             elif maxTotal == 10:
                 if faceUp >= 2 and faceUp <= 9:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
             elif maxTotal == 9:
-                if faceUp >= 3 and faceUp <= 6:
+                if faceUp >= 2 and faceUp <= 6:
                     return 'Double' if canDouble else 'Hit'
                 else:
                     return 'Hit'
             else:
                 return 'Hit'
-                
+    def illustrious18(self, hand, faceUp, count):
+        #insurance w/ count 3
+        #split 10s vs 6 w/ count 4
+        #split 10s vs 5 w/ count 5
+        #stay on 12 vs 3 w/  count 2
+        #stay on 12 vs 2 w/ count 3
+        #double on 9 vs 2 w/ count 1
+        #double on 9 vs 7 w/ count 3
+        #double on 10 vs 10 w/ count 4
+        #double on 10 vs A w/ count 4
+        #double on 11 vs A w/ count 1
+        #stay on 16 vs 10 w/ count > 0
+        #stay on 15 vs 10 w/ count 4
+        #stay on 16 vs 9 w/ count 5
+        #hit on 13 vs 2 w/ count -1
+        #hit on 13 vs 3 w/ count -2
+        #hit on 12 vs 4 w/ count < 0
+        #hit on 12 vs 5 w/ count -2
+        #hit on 12 vs 6 w/ count -1
+        total = self.getTotal(hand)
+        maxTotal = total[len(total) - 1]
+        hasAce = len(total) == 2
+        canDouble = len(hand) == 2
+        
+        if hasAce:
+            return False
+        elif maxTotal == 12:
+            if faceUp == 2 and count >= 3:
+                return 'Stand'
+            elif faceUp == 3 and count >= 2:
+                return 'Stand'
+            elif faceUp == 4 and count < 0:
+                return 'Hit'
+            elif faceUp == 5 and count <= -2:
+                return 'Hit'
+            elif faceUp == 6 and count <= -1:
+                return 'Hit'
+            else:
+                return False
+        elif maxTotal == 13:
+            if faceUp == 2 and count <= -1:
+                return 'Hit'
+            elif faceUp == 3 and count <= -2:
+                return 'Hit'
+            else:
+                return False
+        elif maxTotal == 16:
+            if faceUp >= 10 and count > 0:
+                return 'Stand'
+            elif faceUp == 9 and count >= 5:
+                return 'Stand'
+            else:
+                return False
+        elif maxTotal == 15:
+            if faceUp >= 10 and count >= 4:
+                return 'Stand'
+            else:
+                return False
+        elif canDouble:
+            if maxTotal == 10 and faceUp >= 10 and count >= 4:
+                return 'Double'
+            elif maxTotal == 10 and faceUp == 1 and count >= 4:
+                return 'Double'
+            elif maxTotal == 9 and faceUp == 7 and count >= 3:
+                return 'Double'
+            elif maxTotal == 9 and faceUp == 2 and count >= 1:
+                return 'Double'
+            else:
+                return False
+        else:
+            return False
+        
 class Blackjack:
     def __init__(self, players= 1, numDecks = 2):
         self.deck = Deck(numDecks)
@@ -352,6 +432,7 @@ class Blackjack:
         self.deck.shuffle()
     def deal(self):
         self.clearHands()
+        
         if self.deck.index > self.deck.cut:
             self.deck.shuffle()
         for i in range(len(self.players)):
@@ -448,9 +529,14 @@ class Blackjack:
         percentLoss = []
         percentDiff = []
         for i in range(len(wins)):
-            percentWin.append(round(wins[i] / (wins[i] + losses[i]), 4))
-            percentLoss.append(round(losses[i] / (wins[i] + losses[i]), 4))
-            percentDiff.append(round((percentWin[i] - percentLoss[i]) * 100, 2));
+            if wins[i] + losses[i] == 0:
+                percentWin.append(0)
+                percentLoss.append(0)
+                percentDiff.append(0)
+            else:
+                percentWin.append(round(wins[i] / (wins[i] + losses[i]), 4))
+                percentLoss.append(round(losses[i] / (wins[i] + losses[i]), 4))
+                percentDiff.append(round((percentWin[i] - percentLoss[i]) * 100, 2));
         print('Player count: ' + str(player.countCount))
         print('Player percent win: ' + str(percentWin))
         print('Player percent loss: ' + str(percentLoss))
@@ -503,7 +589,7 @@ def numberOfGames(blackjack, method):
         count += 1
     print(count)
 def runPlaysOld(times):
-    blackjack = Blackjack(1)
+    blackjack = Blackjack(1, 2)
     blackjack.shuffle()
     for i in range(times):
         if i % 100000 == 0:
