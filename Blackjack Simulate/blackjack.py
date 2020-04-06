@@ -1,6 +1,7 @@
 from deck import Deck
 from strategy import Strategy
 from player import Player
+import time
 
 class Blackjack:
     def __init__(self, players = 1, numDecks = 2):

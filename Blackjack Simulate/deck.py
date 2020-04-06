@@ -1,5 +1,6 @@
 import math
 import random
+import time
 class Deck:
     def __init__(self, numDecks = 2):
         self.deck = []
@@ -15,6 +16,16 @@ class Deck:
                     if i >= 10:
                         card = 10 
                     self.deck.append(card)
+        #self.generateTrueCountTable()
+    def generateTrueCountTable(self):
+        trueCountTable = []
+        for i in range(60):
+            count = i - 30
+            countRow = []
+            for j in range(self.length):
+                countRow.append(math.floor(count * 52 / (self.length - j)))
+            trueCountTable.append(countRow)
+        self.trueCountTable = trueCountTable
     def shuffle(self):
         random.shuffle(self.deck)
         self.index = 0
@@ -76,5 +87,6 @@ class Deck:
         elif value == 9:
             self.count -= 1 
     def getTrueCount(self):
-        trueCount = math.floor(self.count * 52 / (len(self.deck) - self.index))
+        #return self.trueCountTable[self.count + 30][self.index]
+        trueCount = math.floor(self.count * 52 / (self.length - self.index))
         return trueCount

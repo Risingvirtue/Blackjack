@@ -1,4 +1,5 @@
 from strategy import Strategy
+import time
 class Player:
     def __init__(self):
         self.hand = [[]]
@@ -32,13 +33,13 @@ class Player:
             self.bet = 10
             self.currMultiplier = 0
         elif trueCount == 2:
-            self.bet = 30
+            self.bet = 70
             self.currMultiplier = 1
         elif trueCount == 3:
-            self.bet = 50
+            self.bet = 120
             self.currMultiplier = 2
         elif trueCount == 4:
-            self.bet = 100
+            self.bet = 160
             self.currMultiplier = 3
         else:
             self.bet = 200
@@ -87,7 +88,7 @@ class Player:
         currIndex = 0
         while True:
             if len(self.hand) == currIndex:
-                return True
+                break
             else:
                 currHand = self.hand[currIndex]
             strategy = self.Strategy.basicStrategy(currHand, faceUp)
@@ -101,7 +102,7 @@ class Player:
                 self.hand.append(newHand)
                 self.bets.append(self.bet)
                 if currHand[0] == 1:
-                    return
+                    break
             elif strategy == 'Hit':
                 currHand.append(deck.deal())
             elif strategy == 'Double':
@@ -111,7 +112,7 @@ class Player:
             elif strategy == 'Stand':
                 currIndex += 1
             else:
-                return None
+                break
     def dealerPlay(self, deck):
         currHand = self.hand[0]
         while True:
@@ -119,5 +120,4 @@ class Player:
             if strategy == 'Hit':
                 currHand.append(deck.deal())
             elif strategy == 'Stand':
-                return
-            
+                return           
