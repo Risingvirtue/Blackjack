@@ -63,7 +63,11 @@ class Blackjack:
                 #print('dealer wins ' + str(player.bets[j]))
     def play(self):
         self.adjustMultiplier()
+        self.adjustSideBet()
         self.deal()
+        dealerHasBlackjack = self.players[1].maxTotal() == 21
+        
+        self.players[0].paySideBet(dealerHasBlackjack)
         if self.players[1].maxTotal() == 21:
             self.winner()
         else:
@@ -73,6 +77,9 @@ class Blackjack:
     def adjustMultiplier(self):
         player = self.players[0]
         player.adjustMultiplier(self.deck.getTrueCount())
+    def adjustSideBet(self):
+        player = self.players[0]
+        player.adjustSideBet(self.deck.getSideBetTrueCount())
     def __str__(self):
         player = self.players[0]
         print("Dealer: ")
@@ -104,4 +111,27 @@ class Blackjack:
         print('Player percent win: ' + str(percentWin))
         print('Player percent loss: ' + str(percentLoss))
         print('Player percent diff: ' + str(percentDiff))
+        #return ''
+        #for i in range(len(player.sideBetWin)):
+        wins = player.sideBetWin
+        losses = player.sideBetLoss
+        percentSideWin = []
+        percentSideLoss = []
+        percentSideDiff = []
+        for i in range(len(wins)):
+            if player.sideBetWin[i] + player.sideBetLoss[i] == 0:
+                percentSideWin.append(0)
+                percentSideLoss.append(0)
+                percentSideDiff.append(0)
+            else:
+                percentSideWin.append(round(wins[i] / (wins[i] + losses[i]), 4))
+                percentSideLoss.append(round(losses[i] / (wins[i] + losses[i]), 4))
+                percentSideDiff.append(round((percentSideWin[i] - percentSideLoss[i]) * 100, 2));
+        print('Player sideBetWin: ' + str(percentSideWin))
+        print('Player sideBetLoss: ' + str(percentSideLoss))
+        print('Player side Bet Count: ' + str(percentSideDiff))
+        print('sideBetMoney: ' + str(player.sideBetMoney))
+        print('actually Side Bet: ' + str(player.actuallySideBet))
+        
+        
         return ""

@@ -5,9 +5,9 @@ class Strategy:
         total = 0
         hasAce = False
         for card in hand:
-            if card == 1:
+            if card.value == 1:
                 hasAce = True
-            total += min(card, 10)
+            total += min(card.value, 10)
         if hasAce:
             if total + 10 > 21:
                 return [total]
@@ -15,7 +15,7 @@ class Strategy:
                 return [total, total + 10]
         return [total]
     def canSplit(self, hand):
-        return len(hand) == 2 and hand[0] == hand[1]
+        return len(hand) == 2 and hand[0].value == hand[1].value
     def dealerStrategy(self, hand):
         total = self.getTotal(hand)
         maxTotal = total[len(total) - 1]
@@ -25,14 +25,16 @@ class Strategy:
             return 'Stand'
     def basicStrategy(self, hand, faceUp):
         total = self.getTotal(hand)
-        if self.canSplit(hand) and hand[0] != 5:
-            if hand[0] == 2 or \
-               hand[0] == 3:
+        faceUp = faceUp.value
+        firstCard = hand[0].value
+        if self.canSplit(hand) and firstCard != 5:
+            if firstCard == 2 or \
+               firstCard == 3:
                 if faceUp <= 7 and faceUp != 1:
                     return 'Split'
                 else:
                     return 'Hit'
-            elif hand[0] == 7:
+            elif firstCard == 7:
                 if faceUp <= 8 and faceUp != 1:
                     return 'Split'
                 else:
@@ -40,12 +42,12 @@ class Strategy:
                         return 'Stand'
                     else:
                         return 'Hit'
-            elif hand[0] == 4:
+            elif firstCard == 4:
                 if faceUp == 5 or faceUp == 6:
                     return 'Split'
                 else:
                     return 'Hit'
-            elif hand[0] == 6:
+            elif firstCard == 6:
                 if faceUp >= 2 and faceUp <= 6:
                     return 'Split'
                 else:
@@ -53,9 +55,9 @@ class Strategy:
                         return 'Stand'
                     else:
                         return 'Hit'
-            elif hand[0] == 8 or hand[0] == 1:
+            elif firstCard == 8 or firstCard == 1:
                 return 'Split'
-            elif hand[0] == 9:
+            elif firstCard == 9:
                 if faceUp == 7 or faceUp == 10 or faceUp == 1:
                     return 'Stand'
                 else:
@@ -64,7 +66,9 @@ class Strategy:
                 return 'Stand'
         elif len(total) == 2: #has an ace and soft
             canDouble = len(hand) == 2
-            if total[1] >= 19:
+            if total[1] >= 20:
+                return 'Stand'
+            if total[1] == 19:
                 if faceUp == 6:  
                     return 'Double'
                 else:
@@ -123,6 +127,7 @@ class Strategy:
             else:
                 return 'Hit'
     def illustrious18(self, hand, faceUp, count):
+        
         #insurance w/ count 3
         #split 10s vs 6 w/ count 4
         #split 10s vs 5 w/ count 5
@@ -145,6 +150,7 @@ class Strategy:
         maxTotal = total[len(total) - 1]
         hasAce = len(total) == 2
         canDouble = len(hand) == 2
+        faceUp = faceUp.value
         if hasAce:
             return False
         elif maxTotal == 12:

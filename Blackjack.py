@@ -71,8 +71,8 @@ class Deck:
         self.index += 1
         return card
     def cardCount(self, card):
-        self.hiLo(card)
-        #self.zenCount(card)
+        #self.hiLo(card)
+        self.zenCount(card)
         #self.KOCount(card)
         #self.omegaII(card)
     def hiLo(self, card):
@@ -82,6 +82,7 @@ class Deck:
         elif value >= 10 or value == 1:
             self.count = self.count - 1
     def zenCount(self, card):
+        print('card: ' + str(card.value))
         value = card.value
         if value == 2 or value == 3 or value == 7:
             self.count += 1
@@ -143,20 +144,20 @@ class Player:
         if trueCount < 2:
             self.bet = 10
             self.currMultiplier = 0
-        elif trueCount == 2:
-            self.bet = 30
+        elif trueCount == 1:
+            self.bet = 20
             self.currMultiplier = 1
-        elif trueCount == 3:
-            self.bet = 50
+        elif trueCount == 2:
+            self.bet = 20
             self.currMultiplier = 2
-        elif trueCount == 4:
-            self.bet = 100
+        elif trueCount == 3:
+            self.bet = 20
             self.currMultiplier = 3
-        elif trueCount == 5:
-            self.bet = 150
+        elif trueCount == 4:
+            self.bet = 20
             self.currMultiplier = 4
         else:
-            self.bet = 200  
+            self.bet = 20  
     def addMultiplierWinner(self, amount=1):
         self.multiplierWin[self.currMultiplier] += amount
         self.countCount[self.currMultiplier] += 1
@@ -218,9 +219,9 @@ class Player:
             else:
                 currHand = self.hand[currIndex]
             strategy = self.basicStrategy(currHand, faceUp.value)
-            #illustrious18 = self.illustrious18(currHand, faceUp.value, deck.getTrueCount())
-            #if illustrious18:
-                #strategy = illustrious18
+            illustrious18 = self.illustrious18(currHand, faceUp.value, deck.getTrueCount())
+            if illustrious18:
+                strategy = illustrious18
             if strategy == 'Split':
                 newHand = [currHand.pop()]
                 currHand.append(deck.deal())
@@ -430,7 +431,6 @@ class Blackjack:
         self.deck.shuffle()
     def deal(self):
         self.clearHands()
-        
         if self.deck.index > self.deck.cut:
             self.deck.shuffle()
         for i in range(len(self.players)):
@@ -438,8 +438,7 @@ class Blackjack:
                 player = self.players[i]
                 card = self.deck.deal()
                 player.hit(card)
-                if i != 0 or j == 0: #start counting all face up cards
-                    self.deck.cardCount(card)
+                
     def clearHands(self):
         for player in self.players:
             player.clear()
@@ -501,7 +500,7 @@ class Blackjack:
             player.adjustMultiplier(trueCount)
     def result(self):
         cardCount = round(self.count * 52 / (self.deck.length - self.deck.index))
-        self.countDealer()
+        #self.countDealer()
         return {"winner": self.winner()[0], 
                 "standWinner": self.standWinner()[0], 
                 "lastValue": self.lastPlayerValue(0), 
@@ -519,7 +518,7 @@ class Blackjack:
         print('minMoney: ' + str(player.minMoney))
         print('minCount: ' + str(player.minCount))
         print('maxMoney: ' + str(player.maxMoney))
-        
+        #print('count: ' + str(self.deck.count))
         wins = player.multiplierWin
         losses = player.multiplierLoss
 
@@ -594,4 +593,4 @@ def runPlaysOld(times):
             print(i)
         blackjack.play()
     print(blackjack)
-runPlaysOld(10000000)
+runPlaysOld(1000000)
