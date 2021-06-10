@@ -43,22 +43,22 @@ class Player:
     def adjustMultiplier(self, trueCount):
         self.count += 1
         if trueCount < 1:
-            self.bet = 10
+            self.bet = 25
             self.currMultiplier = 0
         elif trueCount == 1:
-            self.bet = 50
+            self.bet = 25
             self.currMultiplier = 1
         elif trueCount == 2:
-            self.bet = 75
+            self.bet = 25
             self.currMultiplier = 2
         elif trueCount == 3:
-            self.bet = 100
+            self.bet = 25
             self.currMultiplier = 3
         elif trueCount == 4:
-            self.bet = 150
+            self.bet = 1000
             self.currMultiplier = 4
         else:
-            self.bet = 200
+            self.bet = 1000
             self.currMultiplier = 4
     def adjustSideBet(self, trueCount):
         if trueCount <= 0:

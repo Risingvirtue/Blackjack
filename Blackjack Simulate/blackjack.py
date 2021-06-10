@@ -50,8 +50,8 @@ class Blackjack:
                 #print('busted remove ' + str(player.bets[j]))
             elif player.hasBlackjack(j) \
                 and not (dealer.hasBlackjack()): #if blackjack and dealer not blackjack
-                player.updateMoney(player.bets[j] * 1.5)
-                player.addMultiplierWinner(player.bets[j] * 1.5)
+                player.updateMoney(player.bets[j] * 1.2)
+                player.addMultiplierWinner(player.bets[j] * 1.2)
                 #print('blackjack add ' + str(player.bets[j] * 3 / 2))
             elif dealerTotal > 21 or currTotal > dealerTotal: #dealer busted or greater than dealer
                 player.updateMoney(player.bets[j])
@@ -111,7 +111,7 @@ class Blackjack:
         print('Player percent win: ' + str(percentWin))
         print('Player percent loss: ' + str(percentLoss))
         print('Player percent diff: ' + str(percentDiff))
-        #return ''
+        return ''
         #for i in range(len(player.sideBetWin)):
         wins = player.sideBetWin
         losses = player.sideBetLoss
